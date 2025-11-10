@@ -1,0 +1,44 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# QueueCTL runtime
+.queuectl/
+
+# Internal notes (not for GitHub)
+.notes/
+QueueCTL.md
+.github/
+
