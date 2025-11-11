@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QueueCTL Dashboard - Modern Job Queue Monitor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #60a5fa;
+            --secondary: #6366f1;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --background: #0f172a;
+            --surface: #1e293b;
+            --surface-light: #334155;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --accent: #8b5cf6;
+        }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+            z-index: -1;
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #1e40af 0%, #6366f1 100%);
+            padding: 1.75rem 2rem;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        h1 i { font-size: 2.5rem; }
+        
+        .subtitle {
+            opacity: 0.95;
+            font-size: 0.95rem;
+            margin-top: 0.25rem;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn-primary {
+            background: white;
+            color: var(--primary);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+        
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--surface-light);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.6s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .stat-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+        
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: var(--surface-light);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+        
+        .stat-change {
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            color: var(--text-muted);
+        }
+        
+        /* Section */
+        .section {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            padding: 0.75rem;
+            background: var(--background);
+            border-radius: 12px;
+        }
+        
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+        
+        .filter-btn:hover {
+            border-color: var(--primary);
+            background: var(--surface-light);
+        }
+        
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        
+        /* Search */
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 3rem;
+            border: 2px solid var(--border);
+            background: var(--background);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--surface);
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+        
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            text-align: left;
+            padding: 1rem;
+            background: var(--background);
+            font-weight: 700;
+            color: var(--text);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+        
+        tbody tr {
+            transition: all 0.2s;
+        }
+        
+        tbody tr:hover {
+            background: var(--surface-light);
+        }
+        
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: capitalize;
+            letter-spacing: 0.3px;
+        }
+        
+        .badge-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+        
+        .badge-processing {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--info);
+            border: 1px solid var(--info);
+        }
+        
+        .badge-completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+        
+        .badge-failed {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+        
+        .badge-dead {
+            background: rgba(148, 163, 184, 0.2);
+            color: var(--text-muted);
+            border: 1px solid var(--text-muted);
+        }
+        
+        /* Priority Badge */
+        .priority-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-weight: 800;
+            font-size: 0.9rem;
+        }
+        
+        .priority-high {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .priority-medium {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .priority-low {
+            background: #6b7280;
+            color: white;
+        }
+        
+        /* Command */
+        .command {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Courier New', monospace;
+            background: var(--background);
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: var(--primary-light);
+            border: 1px solid var(--border);
+            max-width: 400px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        /* Action Buttons */
+        .action-btn {
+            padding: 0.4rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        
+        .action-btn-retry {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .action-btn-retry:hover {
+            background: var(--primary-dark);
+            transform: scale(1.05);
+        }
+        
+        .action-btn-view {
+            background: var(--surface-light);
+            color: var(--text);
+        }
+        
+        .action-btn-view:hover {
+            background: var(--border);
+        }
+        
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--background);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+        
+        .metric-item:hover {
+            border-color: var(--primary);
+            transform: translateX(5px);
+        }
+        
+        .metric-item span:first-child {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        
+        .metric-item strong {
+            font-size: 1.25rem;
+            color: var(--primary-light);
+        }
+        
+        /* Loading */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+        
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .toast {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            min-width: 300px;
+            box-shadow: 0 4px 20px var(--shadow);
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .toast-success { border-left: 4px solid var(--success); }
+        .toast-error { border-left: 4px solid var(--danger); }
+        .toast-info { border-left: 4px solid var(--info); }
+        
+        .toast i {
+            font-size: 1.5rem;
+        }
+        
+        .toast-success i { color: var(--success); }
+        .toast-error i { color: var(--danger); }
+        .toast-info i { color: var(--info); }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-content {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            animation: scaleIn 0.3s ease;
+        }
+        
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: color 0.2s;
+        }
+        
+        .modal-close:hover {
+            color: var(--text);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            background: var(--background);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .form-group small {
+            display: block;
+            margin-top: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 1rem;
+            }
+            
+            .stat-value {
+                font-size: 2rem;
+            }
+            
+            .section {
+                padding: 1rem;
+            }
+            
+            .search-box {
+                min-width: 100%;
+            }
+            
+            .toast-container {
+                right: 1rem;
+                left: 1rem;
+            }
+            
+            .toast {
+                min-width: auto;
+            }
+        }
+        
+        /* Pulse Animation */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 0.8;
+            }
+        }
+        
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div>
+                <h1>
+                    <i class="fas fa-rocket"></i>
+                    QueueCTL
+                </h1>
+                <p class="subtitle">Production-Ready Job Queue Monitor</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="openEnqueueModal()">
+                    <i class="fas fa-plus"></i>
+                    Enqueue Job
+                </button>
+                <button class="btn btn-secondary" onclick="refreshAll()">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-label">Pending</div>
+                    <div class="stat-icon" style="background: rgba(245, 158, 11, 0.2); color: var(--warning);">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="stat-pending">-</div>
+                <div class="stat-change">Waiting in queue</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-label">Processing</div>
+                    <div class="stat-icon" style="background: rgba(59, 130, 246, 0.2); color: var(--info);">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="stat-processing">-</div>
+                <div class="stat-change">Currently running</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-label">Completed</div>
+                    <div class="stat-icon" style="background: rgba(16, 185, 129, 0.2); color: var(--success);">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="stat-completed">-</div>
+                <div class="stat-change">Successfully finished</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-label">Failed</div>
+                    <div class="stat-icon" style="background: rgba(239, 68, 68, 0.2); color: var(--danger);">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="stat-failed">-</div>
+                <div class="stat-change">Encountered errors</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-label">Dead (DLQ)</div>
+                    <div class="stat-icon" style="background: rgba(148, 163, 184, 0.2); color: var(--text-muted);">
+                        <i class="fas fa-skull"></i>
+                    </div>
+                </div>
+                <div class="stat-value" id="stat-dead">-</div>
+                <div class="stat-change">Max retries exceeded</div>
+            </div>
+        </div>
+        
+        <!-- Metrics Summary -->
+        <div class="section">
+            <div class="section-header">
+                <h2>
+                    <i class="fas fa-chart-line"></i>
+                    Metrics Summary
+                </h2>
+            </div>
+            <div class="metrics-grid" id="metrics">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading metrics...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Jobs Table -->
+        <div class="section">
+            <div class="section-header">
+                <h2>
+                    <i class="fas fa-list"></i>
+                    Jobs
+                </h2>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; flex: 1; justify-content: flex-end;">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-input" placeholder="Search jobs by ID or command...">
+                    </div>
+                    <div class="filters">
+                        <button class="filter-btn active" data-state="all">All</button>
+                        <button class="filter-btn" data-state="pending">Pending</button>
+                        <button class="filter-btn" data-state="processing">Processing</button>
+                        <button class="filter-btn" data-state="completed">Completed</button>
+                        <button class="filter-btn" data-state="failed">Failed</button>
+                        <button class="filter-btn" data-state="dead">Dead</button>
+                    </div>
+                </div>
+            </div>
+            <div class="table-container" id="jobs-table">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading jobs...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+    
+    <!-- Enqueue Modal -->
+    <div class="modal" id="enqueue-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-plus-circle"></i> Enqueue New Job</h2>
+                <button class="modal-close" onclick="closeEnqueueModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="enqueue-form" onsubmit="enqueueJob(event)">
+                <div class="form-group">
+                    <label>Job ID *</label>
+                    <input type="text" id="job-id" required placeholder="unique-job-id">
+                    <small>Unique identifier for this job</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Command *</label>
+                    <textarea id="job-command" rows="3" required placeholder="echo 'Hello World'"></textarea>
+                    <small>Shell command to execute</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Priority (1-10)</label>
+                    <input type="number" id="job-priority" min="1" max="10" value="5">
+                    <small>10 = highest priority, 1 = lowest</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Max Retries</label>
+                    <input type="number" id="job-retries" min="0" max="10" value="3">
+                    <small>Number of retry attempts on failure</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Schedule (Optional)</label>
+                    <input type="datetime-local" id="job-schedule">
+                    <small>Leave empty for immediate execution</small>
+                </div>
+                
+                <button type="submit" class="btn btn-success" style="width: 100%;">
+                    <i class="fas fa-paper-plane"></i>
+                    Enqueue Job
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        let currentFilter = 'all';
+        let allJobs = [];
+        let searchQuery = '';
+        
+        // Toast notifications
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            const icon = type === 'success' ? 'check-circle' : 
+                        type === 'error' ? 'exclamation-circle' : 'info-circle';
+            
+            toast.innerHTML = `
+                <i class="fas fa-${icon}"></i>
+                <div>${message}</div>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+        
+        // Fetch stats
+        async function fetchStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const stats = await res.json();
+                
+                document.getElementById('stat-pending').textContent = stats.pending || 0;
+                document.getElementById('stat-processing').textContent = stats.processing || 0;
+                document.getElementById('stat-completed').textContent = stats.completed || 0;
+                document.getElementById('stat-failed').textContent = stats.failed || 0;
+                document.getElementById('stat-dead').textContent = stats.dead || 0;
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        }
+        
+        // Fetch metrics
+        async function fetchMetrics() {
+            try {
+                const res = await fetch('/api/metrics');
+                const metrics = await res.json();
+                
+                const container = document.getElementById('metrics');
+                const counts = metrics.event_counts || {};
+                const avgDuration = metrics.average_duration || 0;
+                
+                container.innerHTML = `
+                    <div class="metric-item">
+                        <span><i class="fas fa-inbox"></i> Enqueued</span>
+                        <strong>${counts.enqueued || 0}</strong>
+                    </div>
+                    <div class="metric-item">
+                        <span><i class="fas fa-play"></i> Started</span>
+                        <strong>${counts.started || 0}</strong>
+                    </div>
+                    <div class="metric-item">
+                        <span><i class="fas fa-check"></i> Completed</span>
+                        <strong>${counts.completed || 0}</strong>
+                    </div>
+                    <div class="metric-item">
+                        <span><i class="fas fa-times"></i> Failed</span>
+                        <strong>${counts.failed || 0}</strong>
+                    </div>
+                    <div class="metric-item">
+                        <span><i class="fas fa-skull-crossbones"></i> DLQ Moves</span>
+                        <strong>${counts.dlq || 0}</strong>
+                    </div>
+                    <div class="metric-item">
+                        <span><i class="fas fa-stopwatch"></i> Avg Duration</span>
+                        <strong>${avgDuration.toFixed(2)}s</strong>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error fetching metrics:', error);
+                document.getElementById('metrics').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Failed to load metrics</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Fetch jobs
+        async function fetchJobs(state = null) {
+            try {
+                const url = state && state !== 'all' ? `/api/jobs?state=${state}` : '/api/jobs';
+                const res = await fetch(url);
+                allJobs = await res.json();
+                
+                renderJobs();
+            } catch (error) {
+                console.error('Error fetching jobs:', error);
+                document.getElementById('jobs-table').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Failed to load jobs</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Render jobs
+        function renderJobs() {
+            const container = document.getElementById('jobs-table');
+            
+            let filteredJobs = allJobs;
+            
+            // Apply search filter
+            if (searchQuery) {
+                filteredJobs = filteredJobs.filter(job => 
+                    job.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    job.command.toLowerCase().includes(searchQuery.toLowerCase())
+                );
+            }
+            
+            if (filteredJobs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>No jobs found</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Command</th>
+                            <th>State</th>
+                            <th>Priority</th>
+                            <th>Attempts</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            filteredJobs.forEach(job => {
+                const priorityClass = job.priority >= 8 ? 'priority-high' : 
+                                     job.priority >= 5 ? 'priority-medium' : 'priority-low';
+                const createdAt = new Date(job.created_at).toLocaleString();
+                
+                html += `
+                    <tr>
+                        <td><strong>${job.id}</strong></td>
+                        <td><span class="command">${job.command}</span></td>
+                        <td>
+                            <span class="badge badge-${job.state}">
+                                <i class="fas fa-circle"></i>
+                                ${job.state}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="priority-badge ${priorityClass}">
+                                ${job.priority}
+                            </span>
+                        </td>
+                        <td>${job.attempts}/${job.max_retries}</td>
+                        <td>${createdAt}</td>
+                        <td>
+                            ${job.state === 'dead' ? 
+                                `<button class="action-btn action-btn-retry" onclick="retryJob('${job.id}')">
+                                    <i class="fas fa-redo"></i> Retry
+                                </button>` : 
+                                '<span style="color: var(--text-muted);">-</span>'}
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        // Retry job
+        async function retryJob(jobId) {
+            if (!confirm(`Retry job "${jobId}"?`)) return;
+            
+            try {
+                const res = await fetch(`/api/retry/${jobId}`, { method: 'POST' });
+                const result = await res.json();
+                
+                if (result.success) {
+                    showToast(`Job "${jobId}" moved back to pending`, 'success');
+                    refreshAll();
+                } else {
+                    showToast('Error: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showToast('Failed to retry job', 'error');
+            }
+        }
+        
+        // Enqueue modal
+        function openEnqueueModal() {
+            document.getElementById('enqueue-modal').classList.add('active');
+        }
+        
+        function closeEnqueueModal() {
+            document.getElementById('enqueue-modal').classList.remove('active');
+            document.getElementById('enqueue-form').reset();
+        }
+        
+        // Enqueue job
+        async function enqueueJob(event) {
+            event.preventDefault();
+            
+            const jobId = document.getElementById('job-id').value;
+            const command = document.getElementById('job-command').value;
+            const priority = parseInt(document.getElementById('job-priority').value);
+            const maxRetries = parseInt(document.getElementById('job-retries').value);
+            const schedule = document.getElementById('job-schedule').value;
+            
+            const data = {
+                id: jobId,
+                command: command,
+                priority: priority,
+                max_retries: maxRetries
+            };
+            
+            if (schedule) {
+                data.run_at = new Date(schedule).toISOString();
+            }
+            
+            try {
+                const res = await fetch('/api/enqueue', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await res.json();
+                
+                if (result.success) {
+                    showToast(`Job "${jobId}" enqueued successfully`, 'success');
+                    closeEnqueueModal();
+                    refreshAll();
+                } else {
+                    showToast('Error: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showToast('Failed to enqueue job', 'error');
+            }
+        }
+        
+        // Search
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            renderJobs();
+        });
+        
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.state;
+                fetchJobs(currentFilter);
+            });
+        });
+        
+        // Refresh all
+        function refreshAll() {
+            fetchStats();
+            fetchMetrics();
+            fetchJobs(currentFilter);
+            showToast('Dashboard refreshed', 'info');
+        }
+        
+        // Close modal on outside click
+        document.getElementById('enqueue-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'enqueue-modal') {
+                closeEnqueueModal();
+            }
+        });
+        
+        // Initial load
+        refreshAll();
+        
+        // Auto-refresh every 5 seconds
+        setInterval(() => {
+            fetchStats();
+            fetchMetrics();
+            fetchJobs(currentFilter);
+        }, 5000);
+    </script>
+</body>
+</html>
