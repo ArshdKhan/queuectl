@@ -6,6 +6,7 @@ import signal
 import time
 from pathlib import Path
 from typing import Optional, Any
+from datetime import datetime, timedelta
 
 import click
 
@@ -48,10 +49,14 @@ def enqueue(job_json: str) -> None:
         config = Config.load()
         manager = QueueManager(config)
         
-        # Parse optional run_at datetime
+        # Parse optional run_at datetime (accepts local time, converts to UTC)
         run_at = None
         if 'run_at' in data:
-            run_at = datetime.fromisoformat(data['run_at'])
+            local_dt = datetime.fromisoformat(data['run_at'])
+            # Convert local time to UTC for storage
+            utc_offset_seconds = -time.timezone if time.daylight == 0 else -time.altzone
+            utc_offset = timedelta(seconds=utc_offset_seconds)
+            run_at = local_dt - utc_offset
         
         job = manager.enqueue(
             data['id'],

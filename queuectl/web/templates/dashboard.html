@@ -461,7 +461,7 @@
         /* Metrics Grid */
         .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 1rem;
         }
         
@@ -742,7 +742,7 @@
         <div class="header-content">
             <div>
                 <h1>
-                    <i class="fas fa-rocket"></i>
+                    <i class="fas fa-layer-group"></i>
                     QueueCTL
                 </h1>
                 <p class="subtitle">Production-Ready Job Queue Monitor</p>
@@ -751,10 +751,6 @@
                 <button class="btn btn-primary" onclick="openEnqueueModal()">
                     <i class="fas fa-plus"></i>
                     Enqueue Job
-                </button>
-                <button class="btn btn-secondary" onclick="refreshAll()">
-                    <i class="fas fa-sync-alt"></i>
-                    Refresh
                 </button>
             </div>
         </div>
@@ -778,7 +774,7 @@
                 <div class="stat-header">
                     <div class="stat-label">Processing</div>
                     <div class="stat-icon" style="background: rgba(59, 130, 246, 0.2); color: var(--info);">
-                        <i class="fas fa-tasks"></i>
+                        <i class="fas fa-spinner"></i>
                     </div>
                 </div>
                 <div class="stat-value" id="stat-processing">-</div>
@@ -1069,7 +1065,8 @@
             filteredJobs.forEach(job => {
                 const priorityClass = job.priority >= 8 ? 'priority-high' : 
                                      job.priority >= 5 ? 'priority-medium' : 'priority-low';
-                const createdAt = new Date(job.created_at).toLocaleString();
+                // Backend sends UTC time, add 'Z' to indicate UTC and convert to local
+                const createdAt = new Date(job.created_at + 'Z').toLocaleString();
                 
                 html += `
                     <tr>
@@ -1150,7 +1147,8 @@
             };
             
             if (schedule) {
-                data.run_at = new Date(schedule).toISOString();
+                // Don't convert to UTC - send local time as-is
+                data.run_at = schedule + ':00';  // Add seconds if not present
             }
             
             try {
@@ -1190,12 +1188,11 @@
             });
         });
         
-        // Refresh all
+        // Refresh all (used by auto-refresh)
         function refreshAll() {
             fetchStats();
             fetchMetrics();
             fetchJobs(currentFilter);
-            showToast('Dashboard refreshed', 'info');
         }
         
         // Close modal on outside click
@@ -1205,10 +1202,7 @@
             }
         });
         
-        // Initial load
-        refreshAll();
-        
-        // Auto-refresh every 5 seconds
+        // Auto-refresh every 5 seconds for real-time updates
         setInterval(() => {
             fetchStats();
             fetchMetrics();

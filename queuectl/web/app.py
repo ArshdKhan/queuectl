@@ -3,8 +3,9 @@ from flask import Flask, render_template, jsonify, request
 from queuectl.config import Config
 from queuectl.queue import QueueManager
 from queuectl.models import JobState
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
+import time
 
 
 def create_app(config_path: Optional[str] = None) -> Flask:
@@ -78,7 +79,17 @@ def create_app(config_path: Optional[str] = None) -> Flask:
         run_at = None
         if run_at_str:
             try:
-                run_at = datetime.fromisoformat(run_at_str)
+                # Parse the datetime string (comes as local time from browser)
+                run_at_str = run_at_str.replace('Z', '')
+                local_dt = datetime.fromisoformat(run_at_str)
+                
+                # Convert local time to UTC (system stores/compares in UTC)
+                # Get local UTC offset
+                utc_offset_seconds = -time.timezone if time.daylight == 0 else -time.altzone
+                utc_offset = timedelta(seconds=utc_offset_seconds)
+                
+                # Subtract offset to get UTC time
+                run_at = local_dt - utc_offset
             except ValueError:
                 return jsonify({'error': 'Invalid run_at format. Use ISO8601'}), 400
         
