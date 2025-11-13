@@ -21,7 +21,7 @@
 
 Watch a complete walkthrough of QueueCTL's features:
 
-📹 **[View Demo on Google Drive](https://drive.google.com/video-link-here)**
+📹 **[View Demo on Google Drive](https://drive.google.com/file/d/1PgSm1GozRotww1lqMrA4-81CA3x_S4j0/view?usp=sharing)**
 
 *The video covers: installation, enqueueing jobs with priorities, multi-worker execution, retry mechanisms, Dead Letter Queue management, scheduled jobs, metrics monitoring, and web dashboard.*
 

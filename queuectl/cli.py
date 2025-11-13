@@ -51,8 +51,10 @@ def enqueue(job_json: str) -> None:
         
         # Parse optional run_at datetime (accepts local time, converts to UTC)
         run_at = None
+        local_time_str = None
         if 'run_at' in data:
             local_dt = datetime.fromisoformat(data['run_at'])
+            local_time_str = data['run_at']  # Keep original for display
             # Convert local time to UTC for storage
             utc_offset_seconds = -time.timezone if time.daylight == 0 else -time.altzone
             utc_offset = timedelta(seconds=utc_offset_seconds)
@@ -67,7 +69,7 @@ def enqueue(job_json: str) -> None:
         )
         
         if run_at:
-            click.echo(f"Enqueued job {job.id} (priority={job.priority}, scheduled for {run_at.isoformat()})")
+            click.echo(f"Enqueued job {job.id} (priority={job.priority}, scheduled for {local_time_str})")
         elif job.priority != 5:
             click.echo(f"Enqueued job {job.id} (priority={job.priority})")
         else:
